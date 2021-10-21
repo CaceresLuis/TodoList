@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using TodoList.Mvc.Models.Entity;
@@ -26,7 +27,7 @@ namespace TodoList.Mvc.Core.TodoModule.Infrastructure.Repository
             return await _dataContext.SaveChangesAsync() > 0;
         }
 
-        public async Task<Todo> GetTodo(int id)
+        public async Task<Todo> GetTodo(Guid id)
         {
             return await _dataContext.Todos.FindAsync(id);
         }

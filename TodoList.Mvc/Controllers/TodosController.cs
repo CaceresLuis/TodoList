@@ -1,13 +1,14 @@
 ﻿using System;
 using MediatR;
-using System.Linq;
 using TodoList.Mvc.Models;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Mvc.Models.Entity;
-using Microsoft.EntityFrameworkCore;
-using TodoList.Mvc.Core.TodoModule.Aplication.TodoService.Create;
+using TodoList.Mvc.Core.TodoModule.Aplication.TodoService.Get;
 using TodoList.Mvc.Core.TodoModule.Aplication.TodoService.List;
+using TodoList.Mvc.Core.TodoModule.Aplication.TodoService.Create;
+using TodoList.Mvc.Core.TodoModule.Aplication.TodoService.Update;
+using TodoList.Mvc.Core.TodoModule.Aplication.TodoService.Delete;
 
 namespace TodoList.Mvc.Controllers
 {
@@ -28,36 +29,32 @@ namespace TodoList.Mvc.Controllers
             return View(await _mediator.Send(new ListTodoQuery()));
         }
 
-        public async Task<IActionResult> Details(Guid id)
+        public async Task<ActionResult> Details(Guid id)
         {
-            Todo todo = await _context.Todos
-                .FirstOrDefaultAsync(m => m.Id == id);
+            TodoViewModel todo = await _mediator.Send(new GetTodoQuery { Id = id });
             if (todo == null)
                 return NotFound();
 
             return View(todo);
         }
 
-        public IActionResult Create()
+        public ActionResult Create()
         {
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(TodoViewModel todo)
+        public async Task<ActionResult> Create(TodoViewModel todo)
         {
-            if (ModelState.IsValid)
-            {
-                await _mediator.Send(new CreateTodoCommand { Todo = todo });
-                return RedirectToAction(nameof(Index));
-            }
-            return View(todo);
+            await _mediator.Send(new CreateTodoCommand { Todo = todo });
+
+            return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Edit(Guid id)
+        public async Task<ActionResult> Edit(Guid id)
         {
-            Todo todo = await _context.Todos.FindAsync(id);
+            TodoViewModel todo = await _mediator.Send(new GetTodoQuery { Id = id });
             if (todo == null)
                 return NotFound();
 
@@ -66,37 +63,17 @@ namespace TodoList.Mvc.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, Todo todo)
+        public async Task<ActionResult> Edit(Guid id, TodoViewModel todo)
         {
             todo.Id = id;
+            await _mediator.Send(new UpdateTodoCommand { Todo = todo });
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(todo);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!TodoExists(todo.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(todo);
+            return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<ActionResult> Delete(Guid id)
         {
-            Todo todo = await _context.Todos
-                .FirstOrDefaultAsync(m => m.Id == id);
+            TodoViewModel todo = await _mediator.Send(new GetTodoQuery { Id = id });
             if (todo == null)
                 return NotFound();
 
@@ -105,17 +82,10 @@ namespace TodoList.Mvc.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(Guid id)
+        public async Task<ActionResult> DeleteConfirmed(Guid id)
         {
-            Todo todo = await _context.Todos.FindAsync(id);
-            _context.Todos.Remove(todo);
-            await _context.SaveChangesAsync();
+            await _mediator.Send(new DeleteTodoCommand { Id = id });
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool TodoExists(Guid id)
-        {
-            return _context.Todos.Any(e => e.Id == id);
         }
     }
 }
