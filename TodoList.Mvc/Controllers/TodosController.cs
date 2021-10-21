@@ -2,8 +2,10 @@
 using MediatR;
 using TodoList.Mvc.Models;
 using System.Threading.Tasks;
+using TodoList.Mvc.Core.Enums;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Mvc.Models.Entity;
+using TodoList.Mvc.Core.Exepctions;
 using TodoList.Mvc.Core.TodoModule.Aplication.TodoService.Get;
 using TodoList.Mvc.Core.TodoModule.Aplication.TodoService.List;
 using TodoList.Mvc.Core.TodoModule.Aplication.TodoService.Create;
@@ -31,11 +33,18 @@ namespace TodoList.Mvc.Controllers
 
         public async Task<ActionResult> Details(Guid id)
         {
-            TodoViewModel todo = await _mediator.Send(new GetTodoQuery { Id = id });
-            if (todo == null)
-                return NotFound();
-
-            return View(todo);
+            try
+            {
+                TodoViewModel todo = await _mediator.Send(new GetTodoQuery { Id = id });
+                return View(todo);
+            }
+            catch (ExceptionHandler e)
+            {
+                TempData["Title"] = e.Error.Title;
+                TempData["Message"] = e.Error.Message;
+                TempData["State"] = State.error.ToString();
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public ActionResult Create()
@@ -47,18 +56,38 @@ namespace TodoList.Mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(TodoViewModel todo)
         {
-            await _mediator.Send(new CreateTodoCommand { Todo = todo });
+            try
+            {
+                await _mediator.Send(new CreateTodoCommand { Todo = todo });
+                TempData["Title"] = "Created";
+                TempData["Message"] = $"The task {todo.Title} was created";
+                TempData["State"] = State.success.ToString();
 
-            return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index));
+            }
+            catch (ExceptionHandler e)
+            {
+                TempData["Title"] = e.Error.Title;
+                TempData["Message"] = e.Error.Message;
+                TempData["State"] = State.error.ToString();
+                return View();
+            }
         }
 
         public async Task<ActionResult> Edit(Guid id)
         {
-            TodoViewModel todo = await _mediator.Send(new GetTodoQuery { Id = id });
-            if (todo == null)
-                return NotFound();
-
-            return View(todo);
+            try
+            {
+                TodoViewModel todo = await _mediator.Send(new GetTodoQuery { Id = id });
+                return View(todo);
+            }
+            catch (ExceptionHandler e)
+            {
+                TempData["Title"] = e.Error.Title;
+                TempData["Message"] = e.Error.Message;
+                TempData["State"] = State.error.ToString();
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
@@ -66,26 +95,43 @@ namespace TodoList.Mvc.Controllers
         public async Task<ActionResult> Edit(Guid id, TodoViewModel todo)
         {
             todo.Id = id;
-            await _mediator.Send(new UpdateTodoCommand { Todo = todo });
+            try
+            {
+                await _mediator.Send(new UpdateTodoCommand { Todo = todo });
+                TempData["Title"] = "Updatede";
+                TempData["Message"] = $"The task {todo.Title} was updated";
+                TempData["State"] = State.success.ToString();
 
-            return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index));
+            }
+            catch (ExceptionHandler e)
+            {
+                TempData["Title"] = e.Error.Title;
+                TempData["Message"] = e.Error.Message;
+                TempData["State"] = State.error.ToString();
+                return View(todo);
+            }
+            
         }
 
         public async Task<ActionResult> Delete(Guid id)
         {
-            TodoViewModel todo = await _mediator.Send(new GetTodoQuery { Id = id });
-            if (todo == null)
-                return NotFound();
+            try
+            {
+                await _mediator.Send(new DeleteTodoCommand { Id = id });
+                TempData["Title"] = "Deleted";
+                TempData["Message"] = "The task was deleted";
+                TempData["State"] = State.success.ToString();
 
-            return View(todo);
-        }
-
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> DeleteConfirmed(Guid id)
-        {
-            await _mediator.Send(new DeleteTodoCommand { Id = id });
-            return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index));
+            }
+            catch (ExceptionHandler e)
+            {
+                TempData["Title"] = e.Error.Title;
+                TempData["Message"] = e.Error.Message;
+                TempData["State"] = State.error.ToString();
+                return RedirectToAction(nameof(Index));
+            }
         }
     }
 }

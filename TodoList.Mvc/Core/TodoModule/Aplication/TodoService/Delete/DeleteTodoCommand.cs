@@ -1,5 +1,5 @@
-﻿using System;
-using MediatR;
+﻿using MediatR;
+using System;
 
 namespace TodoList.Mvc.Core.TodoModule.Aplication.TodoService.Delete
 {

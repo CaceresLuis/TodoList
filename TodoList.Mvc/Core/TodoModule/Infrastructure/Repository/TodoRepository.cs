@@ -31,6 +31,11 @@ namespace TodoList.Mvc.Core.TodoModule.Infrastructure.Repository
         {
             return await _dataContext.Todos.FindAsync(id);
         }
+        
+        public async Task<Todo> GetTodo(string title)
+        {
+            return await _dataContext.Todos.FirstOrDefaultAsync(t => t.Title == title);
+        }
 
         public async Task<List<Todo>> GetTodoContain(string text)
         {

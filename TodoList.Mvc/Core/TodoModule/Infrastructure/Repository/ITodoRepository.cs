@@ -10,6 +10,7 @@ namespace TodoList.Mvc.Core.TodoModule.Infrastructure.Repository
         Task<bool> AddTodo(Todo todo);
         Task<bool> DeleteTodo(Todo todo);
         Task<Todo> GetTodo(Guid id);
+        Task<Todo> GetTodo(string title);
         Task<List<Todo>> GetTodoContain(string text);
         Task<List<Todo>> GetTodos();
         Task<bool> UpdateTodo(Todo todo);
