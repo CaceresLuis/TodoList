@@ -23,6 +23,16 @@ namespace TodoList.Mvc.Core.TodoModule.Aplication.TodoService.Update
         {
             TodoViewModel todoR = request.Todo;
             Todo todo = await _todoRepository.GetTodo(todoR.Id);
+            if (todo == null)
+                throw new ExceptionHandler(HttpStatusCode.BadRequest,
+                    new Error
+                    {
+                        Code = "Error",
+                        Message = "Task does exist",
+                        Title = "Error",
+                        State = State.error,
+                        IsSuccess = false
+                    });
             if (todo.Title != todoR.Title)
             {
                 if (await _todoRepository.GetTodo(todoR.Title) != null)
